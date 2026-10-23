@@ -1,0 +1,15 @@
+@model OperacionVm
+@{var seccion=ViewData["SeccionOperacion"] as string;}
+@if(seccion=="alertas"){
+<section class="panel"><h2>Alertas pendientes de estación</h2><div class="table-wrap"><table><thead><tr><th>Fecha Guatemala</th><th>Estación</th><th>Personas esperando</th><th>Ocupación</th><th>Atención</th></tr></thead><tbody>
+@if(Model.Alertas.Count==0){<tr><td colspan="5">No hay alertas pendientes.</td></tr>}
+@foreach(var x in Model.Alertas){<tr><td>@x.FechaGeneracion.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td><td>@x.Estacion</td><td>@x.CantidadPasajeros / @x.CapacidadEvaluada</td><td>@x.Porcentaje.ToString("0.00") %</td><td><form asp-controller="Operacion" asp-action="AtenderAlerta" method="post" class="inline-form"><input type="hidden" name="lineaID" value="@Model.LineaSeleccionada"/><input type="hidden" name="id" value="@x.AlertaID"/><input name="observacion" placeholder="Unidad enviada u otra atención"/><button type="submit">Atender alerta</button></form></td></tr>}
+</tbody></table></div></section>
+}
+@if(seccion=="esperas"){
+<section class="panel"><h2>Esperas por baja ocupación</h2><p>Cuando el bus queda por debajo del 25 %, espere cinco minutos desde el conteo. La espera se marca aplicada al registrar la salida.</p><div class="table-wrap"><table><thead><tr><th>Registro de ocupación</th><th>Indicación Guatemala</th><th>Minutos adicionales</th><th>Estado</th></tr></thead><tbody>@foreach(var x in Model.Esperas){<tr><td>@x.RegistroOcupacionID</td><td>@x.FechaIndicacion.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td><td>@x.MinutosAdicionales</td><td>@(x.Aplicada?"Aplicada":"Pendiente")</td></tr>}</tbody></table></div></section>
+}
+@if(seccion=="conteo"){
+<details class="panel"><summary>Conteo de estación sin llegada de bus</summary><form asp-controller="Operacion" asp-action="RegistrarConteo" method="post" class="form-grid"><input type="hidden" name="lineaID" value="@Model.LineaSeleccionada"/><label>Estación<select name="estacionID">@foreach(var e in Model.Estaciones){<option value="@e.EstacionID">@e.Nombre</option>}</select></label><label>Personas esperando<input type="number" name="cantidadPasajeros" min="0" required/></label><label>Operador<select name="operadorID"><option value="">Sin especificar</option>@foreach(var o in Model.Operadores){<option value="@o.OperadorID">@o.Nombres @o.Apellidos</option>}</select></label><button type="submit">Evaluar estación</button></form></details>
+
+}

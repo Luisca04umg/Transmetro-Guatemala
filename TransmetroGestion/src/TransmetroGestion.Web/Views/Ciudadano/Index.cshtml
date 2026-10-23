@@ -1,0 +1,25 @@
+@model CiudadanoVm
+@{ Layout = "_CiudadanoLayout"; ViewData["Title"] = "Mi tarjeta"; }
+<div class="page-heading"><div><h1>Mi tarjeta</h1><p>@Model.Tarjeta.NumeroToken · @Model.Tarjeta.Estado</p></div><form asp-action="Salir" method="post"><button type="submit">Cerrar mi tarjeta</button></form></div>
+<section class="panel"><h2>Saldo disponible</h2><h1>Q @Model.Tarjeta.Saldo.ToString("0.00")</h1></section>
+<section class="forms-grid">
+<section class="panel"><h2>Recargar tarjeta</h2><p>Recarga de demostración académica.</p><form asp-action="Recargar" method="post" class="form-grid"><input type="hidden" name="solicitud" value="@Guid.NewGuid()"/><label>Monto Q<input name="monto" type="number" min="0.01" max="10000" step="0.01" required/></label><button type="submit">Recargar</button></form></section>
+<section class="panel"><h2>Pagar mi recorrido · Q2.00</h2><p>Q2.00 cubren el recorrido dentro de la misma línea. Cambiar de línea requiere otro pago de Q2.00.</p>
+@if(Model.PaseActivo is not null){<p><strong>Cobertura vigente: @Model.Lineas.FirstOrDefault(x=>x.LineaID==Model.PaseActivo.LineaID)?.Nombre</strong></p><form asp-action="FinalizarRecorrido" method="post"><button type="submit">Finalizar mi recorrido</button></form><p>Finalice al terminar su viaje; el próximo recorrido requerirá un nuevo pago.</p>}
+<form asp-action="Pagar" method="post" class="form-grid"><input type="hidden" name="solicitud" value="@Guid.NewGuid()"/>
+<label>Estación donde se encuentra<select name="estacionID" id="estacionPago" required><option value="">Seleccione estación</option>@foreach(var e in Model.Estaciones){<option value="@e.EstacionID">@e.Nombre</option>}</select></label>
+<label>Línea que utilizará<select name="lineaID" id="lineaPago" required><option value="">Seleccione estación primero</option></select></label><p id="importePago" aria-live="polite">Importe fijo: Q2.00. No necesita seleccionar su destino.</p><button type="submit">Confirmar pago</button></form></section>
+</section>
+<section class="panel"><h2>Mis últimos 100 movimientos</h2><div class="table-wrap"><table><thead><tr><th>Fecha Guatemala</th><th>Operación</th><th>Estación</th><th>Monto</th><th>Saldo resultante</th></tr></thead><tbody>@foreach(var m in Model.Movimientos){<tr><td>@m.FechaHora.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td><td>@(m.Tipo == "R" ? "Recarga" : "Pago")</td><td>@(Model.Estaciones.FirstOrDefault(e=>e.EstacionID==m.EstacionID)?.Nombre ?? "—")</td><td>Q @m.Monto.ToString("0.00")</td><td>Q @m.SaldoNuevo.ToString("0.00")</td></tr>}</tbody></table></div></section>
+@section Scripts {
+<script>
+(()=>{
+const routes=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Ruta.Select(x=>new {station=x.EstacionID,line=x.LineaID})));
+const lines=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Lineas.Select(x=>new {id=x.LineaID,name=x.Nombre})));
+const active=@(Model.PaseActivo?.LineaID ?? 0), station=document.getElementById('estacionPago'), line=document.getElementById('lineaPago'), amount=document.getElementById('importePago');
+station.addEventListener('change',()=>{line.replaceChildren();const memberships=new Set(routes.filter(x=>x.station===Number(station.value)).map(x=>x.line));for(const x of lines.filter(x=>memberships.has(x.id))){const option=document.createElement('option');option.value=x.id;option.textContent=x.name;line.appendChild(option);}update();});
+function update(){amount.textContent=Number(line.value)===active && active>0?'Esta línea ya está cubierta. No se descontará otro pago.':'Importe automático: Q2.00.';}
+line.addEventListener('change',update);
+})();
+</script>
+}

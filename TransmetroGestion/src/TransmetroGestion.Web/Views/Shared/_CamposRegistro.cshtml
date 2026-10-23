@@ -1,0 +1,11 @@
+@model RegistroVistaVm
+@using TransmetroGestion.Web.Services
+<dl class="record-fields">
+@foreach(var propiedad in Model.Entidad.GetType().GetProperties())
+{
+    if(propiedad.Name=="VersionFila"){continue;}
+    var valor=Model.Relaciones.GetValueOrDefault(propiedad.Name) ?? EdicionService.Mostrar(propiedad.GetValue(Model.Entidad));
+    <div><dt>@EdicionService.Etiqueta(propiedad.Name)</dt><dd>@valor</dd></div>
+}
+@foreach(var relacion in Model.Relaciones.Where(x=>Model.Entidad.GetType().GetProperty(x.Key)==null)){<div><dt>@relacion.Key</dt><dd>@relacion.Value</dd></div>}
+</dl>

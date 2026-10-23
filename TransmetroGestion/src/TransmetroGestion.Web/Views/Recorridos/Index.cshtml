@@ -1,0 +1,69 @@
+@model RecorridosVm
+@using TransmetroGestion.Web.Services
+@{ViewData["Title"]="Operación y recorridos";var linea=Model.Lineas.FirstOrDefault(x=>x.LineaID==Model.LineaSeleccionada);}
+<h1>Operación y recorridos</h1>
+<section class="panel"><form asp-action="Index" method="get" class="form-grid"><label>Primero seleccione una línea<select name="lineaID" required><option value="">Seleccione línea</option>@foreach(var l in Model.Lineas){<option value="@l.LineaID" selected="@(l.LineaID==Model.LineaSeleccionada)">@l.Codigo · @l.Nombre · @(l.Estado=="A"?"Activa":l.Estado=="I"?"Inactiva":"Pendiente")</option>}</select></label><button type="submit">Abrir esta línea</button></form></section>
+@if(linea is null){<p>Seleccione una línea para consultar sus buses, paradas, conteos y demás acciones.</p>}
+else
+{
+ <h2>@linea.Nombre</h2>
+ @if(linea.Estado!="A"){<div class="alert danger">Esta línea está @(linea.Estado=="I"?"inactiva":"pendiente"). Para iniciar nuevos viajes active la línea y al menos dos de sus estaciones en Rutas, estaciones y flota.</div>}
+ <nav class="action-menu" aria-label="Acciones de la línea">
+ @foreach(var item in new[]{("seguimiento","Seguimiento y paradas"),("asignar","Asignar piloto"),("iniciar","Iniciar recorrido"),("pilotos","Pilotos asignados"),("alertas","Alertas de estación"),("esperas","Esperas"),("conteo","Conteo sin bus"),("historial","Historial de conteos"),("tiempos","Tiempos"),("recorridos","Últimos recorridos")}){<a class="@(Model.Seccion==item.Item1?"selected":"")" asp-action="Index" asp-route-lineaID="@linea.LineaID" asp-route-seccion="@item.Item1">@item.Item2</a>}
+ </nav>
+ @if(Model.Seccion=="asignar")
+ {
+  <section class="panel"><h2>Asignar piloto a bus de @linea.Nombre</h2><form asp-action="AsignarPiloto" method="post" class="form-grid"><input type="hidden" name="lineaID" value="@linea.LineaID"/><label>Bus disponible de esta línea<select name="busID" required>@foreach(var b in Model.BusesDisponibles){<option value="@b.BusID">@b.CodigoInterno · @b.Placa</option>}</select></label><label>Piloto disponible<select name="pilotoID" required>@foreach(var p in Model.PilotosDisponibles){<option value="@p.PilotoID">@p.Nombres @p.Apellidos</option>}</select></label><button type="submit">Guardar asignación</button></form><p>Los pilotos libres pueden asignarse a un bus de esta línea. Un piloto ocupado en otra unidad no se ofrece como disponible.</p></section>
+ }
+ @if(Model.Seccion=="iniciar")
+ {
+  var disponibles=Model.BusesDisponibles.Where(b=>Model.Asignaciones.Any(a=>a.BusID==b.BusID));
+  <section class="panel"><h2>Iniciar recorrido de @linea.Nombre</h2><form asp-action="Iniciar" method="post" class="form-grid"><input type="hidden" name="lineaID" value="@linea.LineaID"/><label>Bus disponible con piloto asignado<select name="busID" required>@foreach(var b in disponibles){<option value="@b.BusID">@b.CodigoInterno</option>}</select></label><button type="submit">Iniciar recorrido</button></form><p>Sólo los buses de esta línea. Las estaciones inactivas o pendientes no se incluirán como paradas.</p></section>
+ }
+ @if(Model.Seccion=="pilotos")
+ {
+  <section class="panel"><h2>Pilotos asignados a buses de @linea.Nombre</h2><table><thead><tr><th>Bus</th><th>Piloto</th><th>Estado del piloto</th><th>Desde (Guatemala)</th></tr></thead><tbody>@foreach(var a in Model.Asignaciones){var p=Model.Pilotos.FirstOrDefault(x=>x.PilotoID==a.PilotoID);<tr><td>@Model.Buses.FirstOrDefault(x=>x.BusID==a.BusID)?.CodigoInterno</td><td>@p?.Nombres @p?.Apellidos</td><td>@(p?.Activo==true?"Activo":"Inactivo")</td><td>@a.FechaInicio.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td></tr>}</tbody></table></section>
+ }
+ @if(Model.Seccion=="seguimiento")
+ {
+  <h2>Seguimiento y conteos de cada bus</h2><p>Última estación reportada por el operador. Registre llegada, conteos y salida en la tarjeta del bus correspondiente.</p>
+  @foreach(var v in Model.Viajes.Where(x=>x.Estado=="EN_CURSO"))
+  {
+   var visitas=Model.Visitas.Where(x=>x.ViajeID==v.ViajeID&&!x.OmitidaMantenimiento).OrderBy(x=>x.OrdenVisita).ToList();
+   var actual=RecorridoReglas.Siguiente(visitas);var ultima=visitas.LastOrDefault(x=>x.LlegadaReal.HasValue);var siguiente=visitas.FirstOrDefault(x=>x.LlegadaReal is null);var destino=visitas.LastOrDefault();
+   var parada=Model.Paradas.FirstOrDefault(x=>x.ViajeID==v.ViajeID&&x.EstacionID==actual?.EstacionID);
+   var antes=Model.Paradas.Where(x=>x.ViajeID==v.ViajeID).OrderByDescending(x=>x.RegistroParadaID).FirstOrDefault()?.PasajerosDespues??0;
+   <section class="panel"><h3>Bus @Model.Buses.FirstOrDefault(x=>x.BusID==v.BusID)?.CodigoInterno · Viaje @v.ViajeID</h3>
+   <p>Última estación: @(Model.Estaciones.FirstOrDefault(x=>x.EstacionID==ultima?.EstacionID)?.Nombre??"Sin llegada registrada") · @(ultima?.SalidaReal is not null?"En tránsito":ultima is null?"Inicio":"En estación")</p>
+   <p>Siguiente estación: @(Model.Estaciones.FirstOrDefault(x=>x.EstacionID==siguiente?.EstacionID)?.Nombre??"Terminal") · Destino: @Model.Estaciones.FirstOrDefault(x=>x.EstacionID==destino?.EstacionID)?.Nombre</p>
+   <p>Llegada estimada Guatemala: @(siguiente?.LlegadaProgramada?.AddHours(-6).ToString("dd/MM/yyyy HH:mm")??"Sin estimación") · Último reporte: @((ultima?.SalidaReal??ultima?.LlegadaReal)?.AddHours(-6).ToString("HH:mm")??"Sin reporte")</p>
+   <details><summary>Ver paradas de este viaje</summary><ol>@foreach(var visita in visitas){<li>@visita.OrdenVisita · @Model.Estaciones.FirstOrDefault(x=>x.EstacionID==visita.EstacionID)?.Nombre · @(visita.SalidaReal.HasValue?"Visitada":visita.LlegadaReal.HasValue?"En estación":"Pendiente")</li>}</ol></details>
+   @if(actual is not null)
+   {
+    <h4>Parada actual: @Model.Estaciones.FirstOrDefault(x=>x.EstacionID==actual.EstacionID)?.Nombre</h4>
+    @if(actual.LlegadaReal is null){<form asp-action="RegistrarPaso" method="post"><input type="hidden" name="lineaID" value="@linea.LineaID"/><input type="hidden" name="viajeID" value="@v.ViajeID"/><input type="hidden" name="evento" value="LLEGADA"/><button type="submit">Registrar llegada</button></form>}
+    else if(parada is null){<p>A bordo antes de esta parada: @antes</p><form asp-action="RegistrarPasajeros" method="post" class="form-grid"><input type="hidden" name="lineaID" value="@linea.LineaID"/><input type="hidden" name="viajeID" value="@v.ViajeID"/><input type="hidden" name="estacionID" value="@actual.EstacionID"/><label>Bajan<input name="bajan" type="number" min="0" max="@antes" value="0" required/></label><label>Suben<input name="suben" type="number" min="0" value="0" required/></label><label>Quedan esperando<input name="esperanEstacion" type="number" min="0" value="0" required/></label><button type="submit">Guardar conteos y evaluar alertas</button></form>}
+    else{<p>Bajaron @parada.Bajan · Subieron @parada.Suben · A bordo @parada.PasajerosDespues · Esperando @parada.EsperanEstacion</p><form asp-action="RegistrarPaso" method="post"><input type="hidden" name="lineaID" value="@linea.LineaID"/><input type="hidden" name="viajeID" value="@v.ViajeID"/><input type="hidden" name="evento" value="SALIDA"/><button type="submit">Registrar salida</button></form>}
+   }
+   </section>
+  }
+  @if(!Model.Viajes.Any(x=>x.Estado=="EN_CURSO")){<p>No hay recorridos en curso en esta línea.</p>}
+ }
+ @if(Model.Seccion is "alertas" or "esperas" or "conteo")
+ {
+  ViewData["SeccionOperacion"]=Model.Seccion;
+  <partial name="_ControlOperativo" model="Model.Operacion"/>
+ }
+ @if(Model.Seccion=="historial")
+ {
+  <section class="panel"><h2>Historial de conteos de @linea.Nombre</h2><div class="table-wrap"><table><thead><tr><th>Viaje</th><th>Estación</th><th>Antes</th><th>Bajan</th><th>Suben</th><th>A bordo</th><th>Esperan</th><th>Fecha Guatemala</th></tr></thead><tbody>@foreach(var r in Model.Paradas.OrderByDescending(x=>x.RegistroParadaID)){<tr><td>@r.ViajeID</td><td>@Model.Estaciones.FirstOrDefault(x=>x.EstacionID==r.EstacionID)?.Nombre</td><td>@r.PasajerosAntes</td><td>@r.Bajan</td><td>@r.Suben</td><td>@r.PasajerosDespues</td><td>@r.EsperanEstacion</td><td>@r.FechaRegistro.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td></tr>}</tbody></table></div></section>
+ }
+ @if(Model.Seccion=="tiempos")
+ {
+  <section class="panel"><h2>Tiempos de @linea.Nombre</h2><p>Se conserva el orden de las estaciones, incluidas las suspendidas para poder reactivarlas. Minutos de traslado desde la estación anterior del trazado.</p><table><thead><tr><th>Orden</th><th>Estación</th><th>Estado</th><th>Minutos</th></tr></thead><tbody>@foreach(var r in Model.Ruta.OrderBy(x=>x.Orden)){var e=Model.Estaciones.FirstOrDefault(x=>x.EstacionID==r.EstacionID);<tr><td>@r.Orden</td><td>@e?.Nombre</td><td>@(e?.Estado=="A"?"Activa":e?.Estado=="I"?"Mantenimiento":"Pendiente")</td><td><form asp-action="ConfigurarTiempo" method="post" class="inline-form"><input type="hidden" name="lineaID" value="@linea.LineaID"/><input type="hidden" name="estacionID" value="@r.EstacionID"/><input name="minutos" type="number" min="0" max="32767" value="@r.TiempoMinuto" required/><button type="submit">Guardar</button></form></td></tr>}</tbody></table></section>
+ }
+ @if(Model.Seccion=="recorridos")
+ {
+  <section class="panel"><h2>Últimos 100 recorridos de @linea.Nombre</h2><table><thead><tr><th>Viaje</th><th>Bus</th><th>Piloto</th><th>Estado</th><th>Salida Guatemala</th><th>Llegada Guatemala</th></tr></thead><tbody>@foreach(var v in Model.Viajes){var p=Model.Pilotos.FirstOrDefault(x=>x.PilotoID==v.PilotoID);<tr><td>@v.ViajeID</td><td>@Model.Buses.FirstOrDefault(x=>x.BusID==v.BusID)?.CodigoInterno</td><td>@p?.Nombres @p?.Apellidos</td><td>@v.Estado</td><td>@v.FechaSalida.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td><td>@v.FechaLlegada?.AddHours(-6).ToString("dd/MM/yyyy HH:mm")</td></tr>}</tbody></table></section>
+ }
+}

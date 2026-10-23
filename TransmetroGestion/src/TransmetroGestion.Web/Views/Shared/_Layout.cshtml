@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Transmetro Gestión</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" asp-controller="Home" asp-action="Index">
+            <img class="brand-image" src="~/images/LogoMuni.png" alt="Municipalidad de Guatemala" asp-append-version="true"/><span class="brand-title">Transmetro De Guatemala</span>
+        </a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="user-area">
+                <span>@User.Identity.Name</span>
+                <form asp-controller="Cuenta" asp-action="CerrarSesion" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="link-button" type="submit">Cerrar sesión</button>
+                </form>
+            </div>
+        }
+    </header>
+
+    <div class="app-shell">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <nav class="sidebar" aria-label="Navegación principal">
+                <a asp-controller="Home" asp-action="Index">Resumen</a>
+                @if (User.HasClaim("permiso", "LINEAS_VER"))
+                {
+                    <a asp-controller="Catalogos" asp-action="Index">Rutas y flota</a>
+                }
+                @if (User.HasClaim("permiso", "PERSONAL_VER"))
+                {
+                    <a asp-controller="Personal" asp-action="Index">Personal y accesos</a>
+                }
+                @if (User.HasClaim("permiso", "ALERTAS_GESTIONAR"))
+                {
+                    <a asp-controller="Recorridos" asp-action="Index">Operación y recorridos</a>
+                }
+                @if (User.HasClaim("permiso", "PAGOS_OPERAR"))
+                {
+                    <a asp-controller="Tarjetas" asp-action="Index">Registro de tarjetas</a>
+                }
+                @if (User.HasClaim("permiso", "REPORTES_VER"))
+                {
+                    <a asp-controller="Reportes" asp-action="Index">Reportes</a>
+                }
+                @if (User.HasClaim("permiso", "USUARIOS_EDITAR"))
+                {
+                    <a asp-controller="Usuarios" asp-action="Index">Usuarios y roles</a>
+                }
+            </nav>
+        }
+
+        <main class="content @(User.Identity?.IsAuthenticated == true ? "" : "content-full")">
+            @if (TempData["Exito"] is string exito)
+            {
+                <div class="alert success">@exito</div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert danger">@error</div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer>Proyecto académico · Sistema Web de Control y Gestión de Transmetro</footer>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

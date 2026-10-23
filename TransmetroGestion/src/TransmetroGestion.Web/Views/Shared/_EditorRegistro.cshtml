@@ -1,0 +1,11 @@
+@model EdicionVm
+<h1>@Model.Titulo</h1><p>Corrija los datos y guarde los cambios. El ID, las fechas de alta y el historial se conservan automáticamente.</p>
+<form asp-action="Guardar" method="post" class="panel form-grid"><input type="hidden" name="tipo" value="@Model.Tipo"/><input type="hidden" name="id" value="@Model.ID"/><input type="hidden" name="revision" value="@Model.Revision"/>
+@foreach(var c in Model.Campos)
+{
+    <label>@c.Etiqueta
+    @if(c.Opciones.Count>0){<select name="@c.Nombre" required="@c.Obligatorio">@foreach(var o in c.Opciones){<option value="@o.Key" selected="@(o.Key==c.Valor)">@o.Value</option>}</select>}
+    else{<input name="@c.Nombre" type="@c.Tipo" value="@c.Valor" required="@c.Obligatorio" maxlength="@c.Maximo" step="@(c.Tipo=="number"?"any":null)"/>}
+    </label>
+}
+<button type="submit">Guardar cambios</button><a asp-action="Index">Volver</a></form>

@@ -1,0 +1,13 @@
+@model TransmetroGestion.Web.Models.ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+<section class="auth-card">
+    <h1>No fue posible completar la solicitud</h1>
+    <p>Revise la conexión con SQL Server y vuelva a intentarlo.</p>
+    @if (Model.RequestId is not null)
+    {
+        <p class="muted">Identificador: @Model.RequestId</p>
+    }
+    <a class="button" asp-controller="Home" asp-action="Index">Volver al inicio</a>
+</section>

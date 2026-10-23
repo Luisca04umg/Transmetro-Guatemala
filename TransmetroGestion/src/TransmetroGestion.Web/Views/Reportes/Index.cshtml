@@ -1,0 +1,54 @@
+@model ReportesVm
+@{
+    ViewData["Title"] = "Reportes";
+}
+<div class="page-heading no-print"><div><h1>Reportes operativos</h1><p>Seleccione el reporte que desea consultar e imprimir.</p></div></div>
+<section class="panel no-print">
+<form asp-action="Index" method="get" class="report-selector">
+<label for="reporteSeleccionado">Reporte
+<select id="reporteSeleccionado" name="reporte" asp-for="Reporte">
+<option value="">Seleccione un reporte</option>
+<option value="lineas">Resumen de líneas</option>
+<option value="estaciones">Estaciones</option>
+<option value="buses">Buses por línea</option>
+<option value="recorridos">Recorridos</option>
+@if(User.HasClaim("permiso","AUDITORIA_VER")){<option value="auditoria">Bitácora de auditoría</option>}
+</select></label><button type="submit">Ver reporte</button>
+</form></section>
+@if(string.IsNullOrEmpty(Model.Reporte)){<p class="no-print">Elija una opción para mostrar su reporte.</p>}
+
+@if(Model.Reporte=="lineas")
+{
+<section class="panel report-result"><div class="panel-title"><h2>Resumen de líneas</h2><button type="button" class="secondary" onclick="window.print()">Imprimir este reporte</button></div><div class="table-wrap"><table><thead><tr><th>Código</th><th>Línea</th><th>Municipalidad</th><th>Estado</th><th>Estaciones</th><th>Buses</th><th>Distancia</th></tr></thead><tbody>
+@foreach(var x in Model.Lineas){<tr><td>@x.Codigo</td><td>@x.Nombre</td><td>@x.Municipalidad</td><td>@x.Estado</td><td>@x.CantidadEstaciones</td><td>@x.CantidadBuses</td><td>@x.DistanciaTotalKm.ToString("0.000") km</td></tr>}
+@if(Model.Lineas.Count==0){<tr><td colspan="7" class="empty">No hay registros para este reporte.</td></tr>}
+</tbody></table></div></section>
+}
+@if(Model.Reporte=="estaciones")
+{
+<section class="panel report-result"><div class="panel-title"><h2>Estaciones</h2><button type="button" class="secondary" onclick="window.print()">Imprimir este reporte</button></div><div class="table-wrap"><table><thead><tr><th>Código</th><th>Estación</th><th>Municipalidad</th><th>Capacidad</th><th>Líneas</th><th>Accesos</th></tr></thead><tbody>
+@foreach(var x in Model.Estaciones){<tr><td>@x.Codigo</td><td>@x.Nombre</td><td>@x.Municipalidad</td><td>@x.CapacidadReferencia</td><td>@x.CantidadLineas</td><td>@x.CantidadAccesos</td></tr>}
+@if(Model.Estaciones.Count==0){<tr><td colspan="6" class="empty">No hay registros para este reporte.</td></tr>}
+</tbody></table></div></section>
+}
+@if(Model.Reporte=="buses")
+{
+<section class="panel report-result"><div class="panel-title"><h2>Buses por línea</h2><button type="button" class="secondary" onclick="window.print()">Imprimir este reporte</button></div><div class="table-wrap"><table><thead><tr><th>Línea</th><th>Bus</th><th>Placa</th><th>Capacidad</th><th>Estado</th><th>Parqueo</th></tr></thead><tbody>
+@foreach(var x in Model.Buses){<tr><td>@x.CodigoLinea - @x.Linea</td><td>@x.CodigoInterno</td><td>@x.Placa</td><td>@x.CapacidadMaxima</td><td>@x.Estado</td><td>@x.Parqueo</td></tr>}
+@if(Model.Buses.Count==0){<tr><td colspan="6" class="empty">No hay registros para este reporte.</td></tr>}
+</tbody></table></div></section>
+}
+@if(Model.Reporte=="recorridos")
+{
+<section class="panel report-result"><div class="panel-title"><h2>Recorridos</h2><button type="button" class="secondary" onclick="window.print()">Imprimir este reporte</button></div><div class="table-wrap"><table><thead><tr><th>Línea</th><th>Orden</th><th>Estación</th><th>Distancia siguiente</th></tr></thead><tbody>
+@foreach(var x in Model.Recorridos){<tr><td>@x.CodigoLinea</td><td>@x.Orden</td><td>@x.CodigoEstacion - @x.Estacion</td><td>@(x.DistanciaSiguienteKm?.ToString("0.000")??"-") km</td></tr>}
+@if(Model.Recorridos.Count==0){<tr><td colspan="4" class="empty">No hay registros para este reporte.</td></tr>}
+</tbody></table></div></section>
+}
+@if(Model.Reporte=="auditoria")
+{
+<section class="panel report-result"><div class="panel-title"><h2>Bitácora de auditoría</h2><button type="button" class="secondary" onclick="window.print()">Imprimir este reporte</button></div><p>Últimos 100 registros.</p><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Entidad</th><th>Operación</th><th>Registro</th><th>Usuario BD</th><th>IP</th></tr></thead><tbody>
+@foreach(var x in Model.Bitacora){<tr><td>@x.FechaHora.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</td><td>@(x.Esquema + "." + x.Tabla)</td><td>@x.Operacion</td><td>@x.ClaveRegistro</td><td>@x.UsuarioBD</td><td>@x.DireccionIP</td></tr>}
+@if(Model.Bitacora.Count==0){<tr><td colspan="6" class="empty">No hay registros para este reporte.</td></tr>}
+</tbody></table></div></section>
+}

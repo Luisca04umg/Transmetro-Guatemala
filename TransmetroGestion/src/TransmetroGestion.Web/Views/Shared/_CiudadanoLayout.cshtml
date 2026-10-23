@@ -1,0 +1,13 @@
+@using Microsoft.AspNetCore.Authentication
+@{
+ var sesionCiudadana=await Context.AuthenticateAsync("Ciudadano");
+ bool mostrarMenu=sesionCiudadana.Succeeded && sesionCiudadana.Principal?.HasClaim(c=>c.Type=="TarjetaID")==true
+    && !string.Equals(ViewContext.RouteData.Values["action"] as string,"Ingresar",StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>@ViewData["Title"] · Mi Transmetro</title><link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/></head>
+<body><header class="topbar"><a class="brand" asp-controller="Ciudadano" asp-action="@(mostrarMenu?"Index":"Ingresar")"><img class="brand-image" src="~/images/LogoMuni.png" alt="Municipalidad de Guatemala" asp-append-version="true"/><span class="brand-title">Transmetro De Guatemala</span></a><a asp-controller="Cuenta" asp-action="IniciarSesion">Acceso del personal</a></header>
+@if(mostrarMenu){
+<nav class="panel" aria-label="Portal ciudadano" style="display:flex;gap:24px;flex-wrap:wrap"><a asp-controller="Ciudadano" asp-action="Index">Mi tarjeta y pagos</a><a asp-controller="Ciudadano" asp-action="Seguimiento">Seguimiento de buses</a><a asp-controller="Ciudadano" asp-action="Mapa">Mapa de líneas y estaciones</a></nav>
+}
+
+<main class="content content-full">@if(TempData["Error"] is string error){<div class="alert danger">@error</div>}@if(TempData["Exito"] is string exito){<div class="alert success">@exito</div>}@RenderBody()</main><footer>Portal ciudadano · Demostración académica</footer><script src="~/js/site.js" asp-append-version="true"></script>@await RenderSectionAsync("Scripts", required:false)</body></html>

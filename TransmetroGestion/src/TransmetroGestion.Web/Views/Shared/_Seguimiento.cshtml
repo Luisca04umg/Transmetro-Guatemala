@@ -1,0 +1,17 @@
+@model RecorridosVm
+@foreach(var viaje in Model.Viajes.Where(x=>x.Estado=="EN_CURSO"))
+{
+    var visitas = Model.Visitas.Where(x=>x.ViajeID==viaje.ViajeID&&!x.OmitidaMantenimiento).OrderBy(x=>x.OrdenVisita).ToList();
+    var ultima = visitas.LastOrDefault(x=>x.LlegadaReal.HasValue);
+    var siguiente = visitas.FirstOrDefault(x=>x.LlegadaReal==null);
+    var destino = visitas.LastOrDefault();
+    var bus = Model.Buses.FirstOrDefault(x=>x.BusID==viaje.BusID);
+    var linea = Model.Lineas.FirstOrDefault(x=>x.LineaID==viaje.LineaID);
+    <section class="panel"><h3>Bus @bus?.CodigoInterno · @linea?.Nombre</h3>
+    <p>Última estación: @(Model.Estaciones.FirstOrDefault(x=>x.EstacionID==ultima?.EstacionID)?.Nombre ?? "Sin llegada registrada") · @(ultima?.SalidaReal.HasValue == true ? "En tránsito" : ultima is null ? "Inicio de recorrido" : "En estación")</p>
+    <p>Se dirige a: @(Model.Estaciones.FirstOrDefault(x=>x.EstacionID==siguiente?.EstacionID)?.Nombre ?? "Terminal") · Destino: @Model.Estaciones.FirstOrDefault(x=>x.EstacionID==destino?.EstacionID)?.Nombre</p>
+    <p>Llegada estimada a la siguiente estación (Guatemala): @(siguiente?.LlegadaProgramada?.AddHours(-6).ToString("dd/MM/yyyy HH:mm") ?? "Sin estimación: configure tiempos")</p>
+    <p>Último reporte: @((ultima?.SalidaReal ?? ultima?.LlegadaReal)?.AddHours(-6).ToString("dd/MM/yyyy HH:mm") ?? "Sin reporte")</p>
+    <ol>@foreach(var v in visitas){<li>@Model.Estaciones.FirstOrDefault(x=>x.EstacionID==v.EstacionID)?.Nombre — @(v.SalidaReal.HasValue ? "Visitada" : v.LlegadaReal.HasValue ? "En estación" : "Pendiente")</li>}</ol></section>
+}
+@if(!Model.Viajes.Any(x=>x.Estado=="EN_CURSO")){<p>No hay buses con recorridos en curso.</p>}

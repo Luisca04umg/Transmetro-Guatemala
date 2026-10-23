@@ -1,0 +1,36 @@
+@model OperacionVm
+@{
+    ViewData["Title"] = "Control operativo";
+}
+<div class="page-heading"><div><h1>Control operativo</h1><p>Ocupación de estaciones, buses, alertas y esperas adicionales.</p></div></div>
+
+<section class="forms-grid">
+    <div class="panel"><div class="panel-title"><h2>Registrar conteo de estación</h2></div>
+        <form asp-action="RegistrarConteo" method="post" class="form-grid">
+            <label>Estación<select name="estacionID">@foreach(var x in Model.Estaciones){<option value="@x.EstacionID">@x.Codigo - @x.Nombre</option>}</select></label>
+            <label>Pasajeros<input name="cantidadPasajeros" type="number" min="0" required /></label>
+            <label>Operador<select name="operadorID"><option value="">Sin especificar</option>@foreach(var x in Model.Operadores){<option value="@x.OperadorID">@x.Nombres @x.Apellidos</option>}</select></label>
+            <button type="submit">Registrar conteo</button>
+        </form>
+        <p class="help">Al llegar al 150 %, SQL Server crea una alerta automáticamente.</p>
+    </div>
+    <div class="panel"><div class="panel-title"><h2>Registrar ocupación de bus</h2></div>
+        <form asp-action="RegistrarOcupacionBus" method="post" class="form-grid">
+            <label>Bus<select name="busID">@foreach(var x in Model.Buses){<option value="@x.BusID">@x.CodigoInterno - @x.Placa</option>}</select></label>
+            <label>Estación<select name="estacionID">@foreach(var x in Model.Estaciones){<option value="@x.EstacionID">@x.Nombre</option>}</select></label>
+            <label>Pasajeros<input name="cantidadPasajeros" type="number" min="0" required /></label>
+            <label>Viaje ID (opcional)<input name="viajeID" type="number" min="1" /></label>
+            <button type="submit">Registrar ocupación</button>
+        </form>
+        <p class="help">Debajo del 25 %, se genera una espera adicional de 5 minutos.</p>
+    </div>
+</section>
+
+<section class="panel"><div class="panel-title"><h2>Alertas pendientes</h2></div><div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Estación</th><th>Pasajeros</th><th>Porcentaje</th><th>Atención</th></tr></thead><tbody>
+@if(Model.Alertas.Count==0){<tr><td colspan="5" class="empty">No hay alertas pendientes.</td></tr>}
+@foreach(var x in Model.Alertas){<tr><td>@x.FechaGeneracion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td>@x.CodigoEstacion - @x.Estacion</td><td>@x.CantidadPasajeros / @x.CapacidadEvaluada</td><td><span class="badge danger">@x.Porcentaje.ToString("0.00") %</span></td><td><form asp-action="AtenderAlerta" method="post" class="inline-form"><input type="hidden" name="id" value="@x.AlertaID"/><input name="observacion" placeholder="Observación"/><button class="small">Atender</button></form></td></tr>}
+</tbody></table></div></section>
+
+<section class="panel"><div class="panel-title"><h2>Esperas adicionales recientes</h2></div><div class="table-wrap"><table><thead><tr><th>Registro</th><th>Indicada</th><th>Minutos</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach(var x in Model.Esperas){<tr><td>@x.RegistroOcupacionID</td><td>@x.FechaIndicacion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td><td>@x.MinutosAdicionales</td><td>@(x.Aplicada?"Aplicada":"Pendiente")</td><td>@if(!x.Aplicada){<form asp-action="AplicarEspera" method="post"><input type="hidden" name="id" value="@x.EsperaID"/><button class="small">Marcar aplicada</button></form>}</td></tr>}
+</tbody></table></div></section>

@@ -1,0 +1,18 @@
+@model InicializarVm
+@{
+    ViewData["Title"] = "Crear administrador";
+}
+<section class="auth-card wide">
+    <img class="auth-logo-image" src="~/images/LogoMuni.png" alt="Municipalidad de Guatemala" asp-append-version="true"/>
+    <h1>Configuración inicial</h1>
+    <p>Cree el primer administrador. Esta pantalla se deshabilitará automáticamente después del registro.</p>
+    <form method="post" class="form-stack">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+        <label>Nombre de usuario<input asp-for="NombreUsuario" required /></label>
+        <label>Correo electrónico<input asp-for="Correo" type="email" required /></label>
+        <label>Contraseña<input asp-for="Contrasena" type="password" minlength="8" required /></label>
+        <label>Confirmar contraseña<input asp-for="ConfirmarContrasena" type="password" minlength="8" required /></label>
+        <button type="submit">Crear administrador</button>
+    </form>
+</section>

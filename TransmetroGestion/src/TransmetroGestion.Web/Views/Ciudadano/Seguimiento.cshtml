@@ -1,0 +1,4 @@
+@model CiudadanoVm
+@{ Layout = "_CiudadanoLayout"; ViewData["Title"] = "Seguimiento de buses"; }
+<h1>Seguimiento de buses</h1><section class="panel"><form asp-action="Seguimiento" method="get" class="form-grid"><label>Línea<select name="lineaID" required><option value="">Seleccione una línea</option>@foreach(var l in Model.Lineas){<option value="@l.LineaID" selected="@(Model.LineaSeleccionada==l.LineaID)">@l.Nombre</option>}</select></label><button type="submit">Consultar buses de esta línea</button></form><p>Se muestra la última estación reportada por el operador. Actualice la consulta para ver nuevos reportes.</p></section>
+@if(Model.LineaSeleccionada.HasValue){<partial name="_Seguimiento" model="Model.Recorridos"/>}else{<p>Seleccione una línea para ver sus buses en recorrido.</p>}

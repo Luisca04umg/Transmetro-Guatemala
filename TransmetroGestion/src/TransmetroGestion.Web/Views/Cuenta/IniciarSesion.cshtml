@@ -1,0 +1,19 @@
+@model LoginVm
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+<section class="auth-card">
+    <img class="auth-logo-image" src="~/images/LogoMuni.png" alt="Municipalidad de Guatemala" asp-append-version="true"/>
+    <h1>Iniciar sesión</h1>
+    <p>Ingrese sus credenciales del sistema de gestión.</p>
+    <form method="post" class="form-stack">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+        <label>Usuario<input asp-for="NombreUsuario" autocomplete="username" required /></label>
+        <label>Contraseña<input asp-for="Contrasena" type="password" autocomplete="current-password" required /></label>
+        <label class="check"><input asp-for="Recordarme" /> Mantener la sesión iniciada</label>
+        <button type="submit">Ingresar</button>
+    </form>
+    <hr /><h2>Portal ciudadano</h2><p>Consulte su saldo, movimientos y recorridos.</p>
+    <a asp-controller="Ciudadano" asp-action="Ingresar">Mi tarjeta →</a>
+</section>

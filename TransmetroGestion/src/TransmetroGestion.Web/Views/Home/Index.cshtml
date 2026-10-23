@@ -1,0 +1,45 @@
+@model DashboardVm
+@{
+    ViewData["Title"] = "Resumen";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Panel de control</h1>
+        <p>Resumen de la operación registrada en TransmetroGestionDB.</p>
+    </div>
+</div>
+
+<section class="stats-grid">
+    <article class="stat"><span>Líneas</span><strong>@Model.Lineas</strong></article>
+    <article class="stat"><span>Estaciones</span><strong>@Model.Estaciones</strong></article>
+    <article class="stat"><span>Buses</span><strong>@Model.Buses</strong></article>
+    <article class="stat"><span>Pilotos activos</span><strong>@Model.Pilotos</strong></article>
+    <article class="stat warning"><span>Alertas pendientes</span><strong>@Model.AlertasPendientes</strong></article>
+    <article class="stat"><span>Tarjetas activas</span><strong>@Model.TarjetasActivas</strong></article>
+</section>
+
+<section class="panel">
+    <div class="panel-title"><h2>Alertas recientes</h2></div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Fecha</th><th>Estación</th><th>Pasajeros</th><th>Capacidad</th><th>Ocupación</th></tr></thead>
+            <tbody>
+            @if (Model.Alertas.Count == 0)
+            {
+                <tr><td colspan="5" class="empty">No hay alertas pendientes.</td></tr>
+            }
+            @foreach (var item in Model.Alertas)
+            {
+                <tr>
+                    <td>@item.FechaGeneracion.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@item.CodigoEstacion - @item.Estacion</td>
+                    <td>@item.CantidadPasajeros</td>
+                    <td>@item.CapacidadEvaluada</td>
+                    <td><span class="badge danger">@item.Porcentaje.ToString("0.00") %</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

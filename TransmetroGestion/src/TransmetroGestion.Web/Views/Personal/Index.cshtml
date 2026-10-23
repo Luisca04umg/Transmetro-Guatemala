@@ -1,0 +1,15 @@
+@model PersonalVm
+@{ViewData["Title"]="Personal y accesos";}
+<h1>Personal y accesos</h1>
+<section class="forms-grid">
+@if(User.HasClaim("permiso","PERSONAL_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearPiloto"})" data-lazy-unload><summary>Nuevo piloto</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","PERSONAL_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearOperador"})" data-lazy-unload><summary>Nuevo operador</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","PERSONAL_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="AsignarOperador"})" data-lazy-unload><summary>Asignar operador a estación</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","PERSONAL_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearGuardia"})" data-lazy-unload><summary>Nuevo guardia</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","ESTACIONES_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearAcceso"})" data-lazy-unload><summary>Nuevo acceso</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","PERSONAL_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="AsignarGuardia"})" data-lazy-unload><summary>Asignar guardia a acceso</summary><div class="lazy-body"></div></details>}
+</section>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Piloto"})" data-lazy-unload><summary>Ver pilotos (@Model.Totales.GetValueOrDefault("Piloto"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Operador"})" data-lazy-unload><summary>Ver operadores (@Model.Totales.GetValueOrDefault("Operador"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Guardia"})" data-lazy-unload><summary>Ver guardias (@Model.Totales.GetValueOrDefault("Guardia"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Acceso"})" data-lazy-unload><summary>Ver accesos (@Model.Totales.GetValueOrDefault("Acceso"))</summary><div class="lazy-body"></div></details>

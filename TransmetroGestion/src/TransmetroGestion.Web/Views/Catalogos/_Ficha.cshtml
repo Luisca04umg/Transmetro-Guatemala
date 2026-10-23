@@ -1,0 +1,54 @@
+@model CatalogosVm
+@{bool editar=User.HasClaim("permiso","PERSONAL_EDITAR");bool editarAcceso=User.HasClaim("permiso","ESTACIONES_EDITAR");bool editarLineas=User.HasClaim("permiso","LINEAS_EDITAR");bool editarEstaciones=editarAcceso;bool editarFlota=User.HasClaim("permiso","FLOTA_EDITAR");}
+@if(Model.TipoFicha=="Linea")
+{
+@foreach(var x in Model.Lineas.Where(x=>x.LineaID==Model.RegistroID))
+{
+ <details class="record-detail" open data-search="@x.Codigo @x.Nombre @x.Descripcion"><summary>@x.Codigo · @x.Nombre · @(x.Estado=="A"?"Activa":x.Estado=="I"?"Inactiva":"Pendiente")</summary>
+ <partial name="_CamposRegistro" model="@(new RegistroVistaVm{Entidad=x,Relaciones=new(){["MunicipalidadID"]=Model.Municipalidades.FirstOrDefault(m=>m.MunicipalidadID==x.MunicipalidadID)?.Nombre??"—"}})"/>
+ @if(editarLineas){<a class="button" asp-action="Editar" asp-route-tipo="Linea" asp-route-id="@x.LineaID">Editar línea</a>@if(x.Estado!="A"){<form asp-action="ActivarLinea" method="post" class="inline-form"><input type="hidden" name="id" value="@x.LineaID"/><button type="submit">Activar línea</button></form>}}
+ <h3>Estaciones asignadas, en orden</h3><div class="table-wrap"><table><thead><tr><th>Orden</th><th>Estación</th><th>Estado</th><th>Minutos desde anterior</th><th>Distancia a siguiente</th><th>Editar asignación</th></tr></thead><tbody>
+ @foreach(var r in Model.LineasEstaciones.Where(r=>r.LineaID==x.LineaID).OrderBy(r=>r.Orden))
+ {
+  var e=Model.Estaciones.FirstOrDefault(e=>e.EstacionID==r.EstacionID);var tramo=Model.Tramos.FirstOrDefault(t=>t.LineaID==x.LineaID&&t.EstacionOrigenID==r.EstacionID);
+  <tr><td>@r.Orden</td><td>@e?.Codigo · @e?.Nombre</td><td>@(e?.Estado=="A"?"Activa":e?.Estado=="I"?"Mantenimiento / inactiva":"Pendiente")</td><td>@r.TiempoMinuto</td><td>@(tramo is null?"Sin configurar":tramo.DistanciaKm.ToString("0.000")+" km")</td><td>
+  @if(editarEstaciones){<details><summary>Cambiar línea, orden o tiempo</summary><form asp-action="GuardarRelacion" method="post" class="form-grid"><input type="hidden" name="origenLineaID" value="@x.LineaID"/><input type="hidden" name="estacionID" value="@r.EstacionID"/><label>Línea<select name="destinoLineaID">@foreach(var l in Model.Lineas){<option value="@l.LineaID" selected="@(l.LineaID==x.LineaID)">@l.Nombre</option>}</select></label><label>Orden<input name="orden" type="number" min="1" value="@r.Orden" required/></label><label>Minutos desde anterior<input name="tiempoMinuto" type="number" min="0" value="@r.TiempoMinuto"/></label><button type="submit">Guardar asignación</button></form></details>}
+  </td></tr>
+ }
+ </tbody></table></div>
+ @if(editarEstaciones){<details><summary>Configurar distancia entre estaciones consecutivas</summary><form asp-action="GuardarTramo" method="post" class="form-grid"><input type="hidden" name="lineaID" value="@x.LineaID"/><label>Origen<select name="origenID">@foreach(var r in Model.LineasEstaciones.Where(r=>r.LineaID==x.LineaID).OrderBy(r=>r.Orden)){<option value="@r.EstacionID">@r.Orden · @Model.Estaciones.FirstOrDefault(e=>e.EstacionID==r.EstacionID)?.Nombre</option>}</select></label><label>Destino<select name="destinoID">@foreach(var r in Model.LineasEstaciones.Where(r=>r.LineaID==x.LineaID).OrderBy(r=>r.Orden)){<option value="@r.EstacionID">@r.Orden · @Model.Estaciones.FirstOrDefault(e=>e.EstacionID==r.EstacionID)?.Nombre</option>}</select></label><label>Distancia km<input name="distanciaKm" type="number" step="0.001" min="0.001" required/></label><button type="submit">Guardar distancia</button></form></details>}
+ <h3>Buses de esta línea</h3><p>@string.Join(" · ",Model.Buses.Where(b=>Model.LineasBuses.Any(a=>a.BusID==b.BusID&&a.LineaID==x.LineaID)).Select(b=>b.CodigoInterno))</p>
+ </details>
+}
+
+}
+@if(Model.TipoFicha=="Estacion")
+{
+@foreach(var x in Model.Estaciones.Where(x=>x.EstacionID==Model.RegistroID))
+{
+ var relaciones=Model.LineasEstaciones.Where(a=>a.EstacionID==x.EstacionID).Select(a=>$"{Model.Lineas.FirstOrDefault(l=>l.LineaID==a.LineaID)?.Nombre} (orden {a.Orden})");
+ <details class="record-detail" open data-search="@x.Codigo @x.Nombre @x.Direccion @string.Join(" ",relaciones)"><summary>@x.Codigo · @x.Nombre · @(x.Estado=="A"?"Activa":x.Estado=="I"?"Inactiva / mantenimiento":"Pendiente")</summary><partial name="_CamposRegistro" model="@(new RegistroVistaVm{Entidad=x,Relaciones=new(){["MunicipalidadID"]=Model.Municipalidades.FirstOrDefault(m=>m.MunicipalidadID==x.MunicipalidadID)?.Nombre??"—",["Líneas y orden"]=string.Join(" · ",relaciones)}})"/>
+ @if(editarEstaciones){<a class="button" asp-action="Editar" asp-route-tipo="Estacion" asp-route-id="@x.EstacionID">Editar estación / mantenimiento</a><details><summary>Editar líneas y orden de esta estación</summary>@foreach(var a in Model.LineasEstaciones.Where(a=>a.EstacionID==x.EstacionID)){<form asp-action="GuardarRelacion" method="post" class="form-grid"><input type="hidden" name="origenLineaID" value="@a.LineaID"/><input type="hidden" name="estacionID" value="@x.EstacionID"/><label>Línea<select name="destinoLineaID">@foreach(var l in Model.Lineas){<option value="@l.LineaID" selected="@(l.LineaID==a.LineaID)">@l.Nombre</option>}</select></label><label>Orden<input name="orden" type="number" min="1" value="@a.Orden" required/></label><label>Minutos desde anterior<input name="tiempoMinuto" type="number" min="0" value="@a.TiempoMinuto"/></label><button type="submit">Guardar asignación</button></form>}</details>@if(x.Estado!="A"){<form asp-action="ActivarEstacion" method="post" class="inline-form"><input type="hidden" name="id" value="@x.EstacionID"/><button type="submit">Activar estación</button></form>}}
+ </details>
+}
+
+}
+@if(Model.TipoFicha=="Bus")
+{
+@foreach(var x in Model.Buses.Where(x=>x.BusID==Model.RegistroID))
+{
+ var a=Model.LineasBuses.FirstOrDefault(a=>a.BusID==x.BusID);var linea=Model.Lineas.FirstOrDefault(l=>l.LineaID==a?.LineaID);var parqueo=Model.Parqueos.FirstOrDefault(r=>r.ParqueoID==x.ParqueoID);
+ <details class="record-detail" open data-search="@x.CodigoInterno @x.Placa @linea?.Nombre"><summary>@x.CodigoInterno · @x.Placa · @(linea?.Nombre??"Sin línea") · @x.Estado</summary><partial name="_CamposRegistro" model="@(new RegistroVistaVm{Entidad=x,Relaciones=new(){["ParqueoID"]=$"{parqueo?.Codigo} · {parqueo?.Nombre}",["Línea asignada"]=linea?.Nombre??"Sin línea"}})"/>
+ @if(editarFlota){<a class="button" asp-action="Editar" asp-route-tipo="Bus" asp-route-id="@x.BusID">Editar bus</a><details><summary>Cambiar línea del bus</summary><form asp-action="CambiarLineaBus" method="post" class="form-grid"><input type="hidden" name="busID" value="@x.BusID"/><label>Línea<select name="lineaID"><option value="">Sin asignar</option>@foreach(var l in Model.Lineas){<option value="@l.LineaID" selected="@(a?.LineaID==l.LineaID)">@l.Nombre</option>}</select></label><button type="submit">Guardar línea</button></form></details>}
+ </details>
+}
+
+}
+@if(Model.TipoFicha=="Parqueo")
+{
+@foreach(var x in Model.Parqueos.Where(x=>x.ParqueoID==Model.RegistroID)){<details class="record-detail" open data-search="@x.Codigo @x.Nombre"><summary>@x.Codigo · @x.Nombre</summary><partial name="_CamposRegistro" model="@(new RegistroVistaVm{Entidad=x,Relaciones=new(){["EstacionID"]=Model.Estaciones.FirstOrDefault(e=>e.EstacionID==x.EstacionID)?.Nombre??"—"}})"/>@if(editarEstaciones){<a asp-action="Editar" asp-route-tipo="Parqueo" asp-route-id="@x.ParqueoID">Editar parqueo</a>}</details>}
+}
+@if(Model.TipoFicha=="Municipalidad")
+{
+@foreach(var x in Model.Municipalidades.Where(x=>x.MunicipalidadID==Model.RegistroID)){<details class="record-detail" open data-search="@x.Codigo @x.Nombre"><summary>@x.Codigo · @x.Nombre</summary><partial name="_CamposRegistro" model="@(new RegistroVistaVm{Entidad=x})"/>@if(editarLineas){<a asp-action="Editar" asp-route-tipo="Municipalidad" asp-route-id="@x.MunicipalidadID">Editar municipalidad</a>}</details>}
+}

@@ -1,0 +1,12 @@
+@model DirectorioVm
+<form asp-action="Directorio" method="get" class="inline-form directory-query" data-directory-query><input type="hidden" name="tipo" value="@Model.Tipo"/><input type="hidden" name="pagina" value="1"/><label>Buscar<input name="q" value="@Model.Q" maxlength="80" placeholder="Código, nombre o datos de contacto"/></label><button type="submit">Buscar</button></form>
+<p>@Model.Total registros · Página @Model.Pagina de @Model.Paginas</p>
+@if(Model.Filas.Count==0){<p>No hay coincidencias.</p>}
+@foreach(var fila in Model.Filas)
+{
+ <details class="record" name="fichas" data-lazy-url="@Url.Action("Ficha",new{tipo=Model.Tipo,id=fila.ID})" data-lazy-unload><summary>@fila.Titulo · @fila.Resumen</summary><div class="lazy-body"></div></details>
+}
+<nav class="directory-pager" aria-label="Páginas del listado">
+@if(Model.Pagina>1){<a data-directory-page href="@Url.Action("Directorio",new{tipo=Model.Tipo,q=Model.Q,pagina=Model.Pagina-1})">← Anterior</a>}
+@if(Model.Pagina<Model.Paginas){<a data-directory-page href="@Url.Action("Directorio",new{tipo=Model.Tipo,q=Model.Q,pagina=Model.Pagina+1})">Siguiente →</a>}
+</nav>

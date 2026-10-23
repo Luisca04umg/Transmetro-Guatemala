@@ -1,0 +1,96 @@
+@model CatalogosVm
+@if(Model.Formulario=="CrearMunicipalidad")
+{
+<h2>Nueva municipalidad</h2>
+
+        <form asp-action="CrearMunicipalidad" method="post" class="form-grid">
+            <label>Código<input name="Codigo" maxlength="20" required /></label>
+            <label>Nombre<input name="Nombre" maxlength="150" required /></label>
+            <label>Departamento<input name="Departamento" value="Guatemala" required /></label>
+            <label>Teléfono<input name="Telefono" /></label>
+            <label>Correo<input name="Correo" type="email" /></label>
+            <label class="span-2">Dirección<input name="Direccion" /></label>
+            <button type="submit">Guardar municipalidad</button>
+        </form>
+    
+}
+@if(Model.Formulario=="CrearLinea")
+{
+<h2>Nueva línea</h2>
+
+        <form asp-action="CrearLinea" method="post" class="form-grid">
+            <label>Municipalidad<select name="MunicipalidadID" required>@foreach(var x in Model.Municipalidades){<option value="@x.MunicipalidadID">@x.Nombre</option>}</select></label>
+            <label>Código<input name="Codigo" required /></label>
+            <label>Nombre<input name="Nombre" required /></label>
+            <label>Descripción<input name="Descripcion" /></label>
+            <button type="submit">Guardar línea</button>
+        </form>
+    
+}
+@if(Model.Formulario=="CrearEstacion")
+{
+<h2>Nueva estación</h2>
+
+        <form asp-action="CrearEstacion" method="post" class="form-grid">
+            <label>Municipalidad<select name="MunicipalidadID" required>@foreach(var x in Model.Municipalidades){<option value="@x.MunicipalidadID">@x.Nombre</option>}</select></label>
+            <label>Código<input name="Codigo" required /></label>
+            <label>Nombre<input name="Nombre" required /></label>
+            <label>Capacidad<input name="CapacidadReferencia" type="number" min="1" value="80" required /></label>
+            <label class="span-2">Dirección<input name="Direccion" /></label><label>Latitud<input name="Latitud" type="number" step="any" min="-90" max="90"/></label><label>Longitud<input name="Longitud" type="number" step="any" min="-180" max="180"/></label>
+            <button type="submit">Guardar estación</button>
+        </form>
+    
+}
+@if(Model.Formulario=="GuardarRelacion")
+{
+<h2>Agregar estación a línea</h2>
+
+        <form asp-action="GuardarRelacion" method="post" class="form-grid">
+            <label>Línea<select name="destinoLineaID" required>@foreach(var x in Model.Lineas){<option value="@x.LineaID">@x.Codigo - @x.Nombre</option>}</select></label>
+            <label>Estación<select name="estacionID" required>@foreach(var x in Model.Estaciones){<option value="@x.EstacionID">@x.Codigo - @x.Nombre</option>}</select></label>
+            <label>Orden<input name="orden" type="number" min="1" required /></label>
+            <label>Tiempo estimado (min)<input name="tiempoMinuto" type="number" min="0" /></label>
+            <button type="submit">Agregar al recorrido</button>
+        </form>
+    
+}
+@if(Model.Formulario=="CrearParqueo")
+{
+<h2>Nuevo parqueo</h2>
+
+        <form asp-action="CrearParqueo" method="post" class="form-grid">
+            <label>Estación<select name="EstacionID" required>@foreach(var x in Model.Estaciones){<option value="@x.EstacionID">@x.Nombre</option>}</select></label>
+            <label>Código<input name="Codigo" required /></label>
+            <label>Nombre<input name="Nombre" required /></label>
+            <label>Capacidad de buses<input name="CapacidadBuses" type="number" min="1" required /></label>
+            <button type="submit">Guardar parqueo</button>
+        </form>
+    
+}
+@if(Model.Formulario=="CrearBus")
+{
+<h2>Nuevo bus</h2>
+
+        <form asp-action="CrearBus" method="post" class="form-grid">
+            <label>Parqueo<select name="ParqueoID" required>@foreach(var x in Model.Parqueos){<option value="@x.ParqueoID">@x.Codigo - @x.Nombre</option>}</select></label>
+            <label>Código interno<input name="CodigoInterno" required /></label>
+            <label>Placa<input name="Placa" required /></label>
+            <label>Capacidad máxima<input name="CapacidadMaxima" type="number" min="1" required /></label>
+            <label>Marca<input name="Marca" /></label>
+            <label>Modelo<input name="Modelo" /></label>
+            <label>Año<input name="Anio" type="number" min="2000" max="2100" /></label>
+            <button type="submit">Guardar bus</button>
+        </form>
+    
+}
+@if(Model.Formulario=="AsignarBus")
+{
+<h2>Asignar bus a línea</h2>
+
+        <form asp-action="AsignarBus" method="post" class="form-grid">
+            <label>Bus<select name="busID" required>@foreach(var x in Model.Buses.Where(b => !Model.LineasBuses.Any(lb => lb.BusID == b.BusID))){<option value="@x.BusID">@x.CodigoInterno - @x.Placa</option>}</select></label>
+            <label>Línea<select name="lineaID" required>@foreach(var x in Model.Lineas){<option value="@x.LineaID">@x.Codigo - @x.Nombre</option>}</select></label>
+            <button type="submit">Asignar bus</button>
+        </form>
+    
+}

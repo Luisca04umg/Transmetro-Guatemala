@@ -1,0 +1,17 @@
+@model CatalogosVm
+@{ViewData["Title"]="Rutas, estaciones y flota";}
+<h1>Rutas, estaciones y flota</h1>
+<section class="forms-grid">
+@if(User.HasClaim("permiso","LINEAS_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearMunicipalidad"})" data-lazy-unload><summary>Nueva municipalidad</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","LINEAS_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearLinea"})" data-lazy-unload><summary>Nueva línea</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","ESTACIONES_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearEstacion"})" data-lazy-unload><summary>Nueva estación</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","ESTACIONES_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="GuardarRelacion"})" data-lazy-unload><summary>Agregar estación a línea</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","ESTACIONES_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearParqueo"})" data-lazy-unload><summary>Nuevo parqueo</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","FLOTA_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="CrearBus"})" data-lazy-unload><summary>Nuevo bus</summary><div class="lazy-body"></div></details>}
+@if(User.HasClaim("permiso","FLOTA_EDITAR")){<details class="panel" name="tareas" data-lazy-url="@Url.Action("Formulario",new{accion="AsignarBus"})" data-lazy-unload><summary>Asignar bus a línea</summary><div class="lazy-body"></div></details>}
+</section>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Linea"})" data-lazy-unload><summary>Ver líneas (@Model.Totales.GetValueOrDefault("Linea"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Estacion"})" data-lazy-unload><summary>Ver estaciones (@Model.Totales.GetValueOrDefault("Estacion"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Bus"})" data-lazy-unload><summary>Ver flota (@Model.Totales.GetValueOrDefault("Bus"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Parqueo"})" data-lazy-unload><summary>Ver parqueos (@Model.Totales.GetValueOrDefault("Parqueo"))</summary><div class="lazy-body"></div></details>
+<details class="panel directory" name="directorios" data-lazy-url="@Url.Action("Directorio",new{tipo="Municipalidad"})" data-lazy-unload><summary>Ver municipalidades (@Model.Totales.GetValueOrDefault("Municipalidad"))</summary><div class="lazy-body"></div></details>

@@ -1,0 +1,21 @@
+@model UsuariosVm
+@{
+    ViewData["Title"] = "Usuarios y roles";
+}
+<div class="page-heading"><div><h1>Usuarios y roles</h1><p>Administración de cuentas y perfiles de acceso.</p></div></div>
+
+<section class="forms-grid">
+    <div class="panel"><div class="panel-title"><h2>Nuevo usuario</h2></div><form asp-action="Crear" method="post" class="form-grid">
+        <label>Usuario<input name="nombreUsuario" required /></label><label>Correo<input name="correo" type="email" required /></label>
+        <label>Contraseña<input name="contrasena" type="password" minlength="8" required /></label>
+        <label>Rol<select name="rolID">@foreach(var x in Model.Roles){<option value="@x.RolID">@x.Nombre</option>}</select></label>
+        <button type="submit">Crear usuario</button></form></div>
+    <div class="panel"><div class="panel-title"><h2>Asignar rol adicional</h2></div><form asp-action="AsignarRol" method="post" class="form-grid">
+        <label>Usuario<select name="usuarioID">@foreach(var x in Model.Usuarios){<option value="@x.UsuarioID">@x.NombreUsuario</option>}</select></label>
+        <label>Rol<select name="rolID">@foreach(var x in Model.Roles){<option value="@x.RolID">@x.Nombre</option>}</select></label>
+        <button type="submit">Asignar rol</button></form></div>
+</section>
+
+<section class="panel"><div class="panel-title"><h2>Cuentas</h2></div><div class="table-wrap"><table><thead><tr><th>Usuario</th><th>Correo</th><th>Roles</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead><tbody>
+@foreach(var x in Model.Usuarios){var ids=Model.Asignaciones.Where(a=>a.UsuarioID==x.UsuarioID).Select(a=>a.RolID);var roles=Model.Roles.Where(r=>ids.Contains(r.RolID)).Select(r=>r.Nombre);<tr><td>@x.NombreUsuario</td><td>@x.Correo</td><td>@string.Join(", ", roles)</td><td>@(x.UltimoAcceso?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")??"Sin ingreso")</td><td>@(x.Activo?"Activo":"Inactivo")</td><td><form asp-action="CambiarEstado" method="post"><input type="hidden" name="id" value="@x.UsuarioID"/><button class="small" type="submit">@(x.Activo?"Desactivar":"Activar")</button></form></td></tr>}
+</tbody></table></div></section>

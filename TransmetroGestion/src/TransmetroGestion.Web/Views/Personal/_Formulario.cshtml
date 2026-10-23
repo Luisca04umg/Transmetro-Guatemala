@@ -1,0 +1,54 @@
+@model PersonalVm
+@if(Model.Formulario=="CrearPiloto")
+{
+<h2>Nuevo piloto</h2>
+<form asp-action="CrearPiloto" method="post" class="form-grid">
+        <label>Código<input name="CodigoEmpleado" required /></label><label>Nombres<input name="Nombres" required /></label>
+        <label>Apellidos<input name="Apellidos" required /></label><label>Teléfono<input name="Telefono" required /></label>
+        <label>Dirección<input name="Direccion" required /></label><label>Municipio<input name="Municipio" required /></label>
+        <label>Departamento<input name="Departamento" value="Guatemala" required /></label><label>Correo<input name="Correo" type="email" /></label>
+        <label>Licencia<input name="Licencia" required /></label><label>Vencimiento<input name="fechaLicencia" type="date" required /></label>
+        <button type="submit">Guardar piloto</button></form>
+}
+@if(Model.Formulario=="CrearOperador")
+{
+<h2>Nuevo operador</h2>
+<form asp-action="CrearOperador" method="post" class="form-grid">
+        <label>Código<input name="CodigoEmpleado" required /></label><label>Nombres<input name="Nombres" required /></label>
+        <label>Apellidos<input name="Apellidos" required /></label><label>Teléfono<input name="Telefono" /></label>
+        <label>Correo<input name="Correo" type="email" /></label><button type="submit">Guardar operador</button></form>
+}
+@if(Model.Formulario=="AsignarOperador")
+{
+<h2>Asignar operador a estación</h2>
+<form asp-action="AsignarOperador" method="post" class="form-grid">
+        <label>Operador<select name="operadorID">@foreach(var x in Model.Operadores.Where(x=>x.Activo)){<option value="@x.OperadorID">@x.CodigoEmpleado - @x.Nombres @x.Apellidos</option>}</select></label>
+        <label>Estación<select name="estacionID">@foreach(var x in Model.Estaciones.Where(x=>x.Estado!="I")){<option value="@x.EstacionID">@x.Nombre</option>}</select></label>
+        <button type="submit">Asignar operador</button></form>
+}
+@if(Model.Formulario=="CrearGuardia")
+{
+<h2>Nuevo guardia</h2>
+<form asp-action="CrearGuardia" method="post" class="form-grid">
+        <label>Código<input name="CodigoEmpleado" required /></label><label>Nombres<input name="Nombres" required /></label>
+        <label>Apellidos<input name="Apellidos" required /></label><label>Teléfono<input name="Telefono" /></label>
+        <label>Empresa<input name="Empresa" /></label><button type="submit">Guardar guardia</button></form>
+}
+@if(Model.Formulario=="CrearAcceso")
+{
+<h2>Nuevo acceso</h2>
+<form asp-action="CrearAcceso" method="post" class="form-grid">
+        <label>Estación<select name="EstacionID">@foreach(var x in Model.Estaciones){<option value="@x.EstacionID">@x.Nombre</option>}</select></label>
+        <label>Código<input name="Codigo" required /></label><label>Nombre<input name="Nombre" required /></label>
+        <label>Tipo<select name="TipoAcceso"><option>PEATONAL</option><option>VEHICULAR</option><option>MIXTO</option><option>EMERGENCIA</option></select></label>
+        <label class="span-2">Descripción<input name="Descripcion" /></label><button type="submit">Guardar acceso</button></form>
+}
+@if(Model.Formulario=="AsignarGuardia")
+{
+<h2>Asignar guardia a acceso</h2>
+<form asp-action="AsignarGuardia" method="post" class="form-grid">
+        <label>Guardia<select name="guardiaID">@foreach(var x in Model.Guardias.Where(x=>x.Activo)){<option value="@x.GuardiaID">@x.CodigoEmpleado - @x.Nombres @x.Apellidos</option>}</select></label>
+        <label>Acceso<select name="accesoID">@foreach(var x in Model.Accesos.Where(x=>x.Estado!="I")){<option value="@x.AccesoID">@x.Codigo - @x.Nombre</option>}</select></label>
+        <label>Turno<select name="turno"><option>DIURNO</option><option>NOCTURNO</option><option>MIXTO</option></select></label>
+        <button type="submit">Asignar guardia</button></form>
+}

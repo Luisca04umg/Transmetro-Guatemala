@@ -1,0 +1,47 @@
+@model TarjetasVm
+@{ ViewData["Title"] = "Registro de tarjetas"; }
+<div class="page-heading"><div><h1>Registro de tarjetas ciudadanas</h1><p>Registre al ciudadano y emita su tarjeta sin vencimiento.</p></div></div>
+<section class="forms-grid">
+<details class="panel"><summary>Nuevo titular</summary><form asp-action="CrearTitular" method="post" class="form-grid"><label>DPI<input name="DPI" inputmode="numeric" pattern="[0-9]{8,9}" minlength="8" maxlength="9" title="Exactamente 8 o 9 dígitos" required/></label><label>Nombres<input name="Nombres" maxlength="100" required/></label><label>Apellidos<input name="Apellidos" maxlength="100" required/></label><label>Correo<input name="Correo" type="email"/></label><label>Teléfono<input name="Telefono"/></label><button type="submit">Guardar titular</button></form></details>
+<details class="panel"><summary>Nueva tarjeta</summary><form asp-action="CrearTarjeta" method="post" class="form-grid">
+<label>Buscar ciudadano por nombre o DPI<input id="titularBusqueda" list="titularesSugeridos" autocomplete="off" placeholder="Escriba al menos 2 caracteres" required/><datalist id="titularesSugeridos"></datalist><input id="titularID" name="titularID" type="hidden"/></label><p id="titularAyuda" aria-live="polite">Seleccione una sugerencia para vincular al ciudadano.</p>
+<label>Número de tarjeta<input name="numeroToken" maxlength="64" required/></label><label>Monto inicial Q<input name="montoInicial" type="number" min="0" step="0.01" value="0" required/></label><button type="submit">Guardar tarjeta</button></form></details>
+</section>
+<section class="panel">
+<form asp-action="Index" method="get" class="report-selector" role="search">
+    <label for="tarjetasBusqueda">Buscar tarjetas por nombre o DPI
+        <input id="tarjetasBusqueda" name="q" value="@Model.Q" maxlength="120" placeholder="Nombre, apellido o DPI del titular"/>
+    </label>
+    <button type="submit">Buscar</button>
+    @if(!string.IsNullOrEmpty(Model.Q)){<a asp-action="Index">Limpiar búsqueda</a>}
+</form>
+<p class="muted" role="status">@Model.Total tarjeta(s) · Página @Model.Pagina de @Model.Paginas</p>
+<h2>Tarjetas registradas</h2><div class="table-wrap"><table><thead><tr><th>Número</th><th>Titular</th><th>DPI</th><th>Saldo</th><th>Estado</th><th>Cambiar estado</th></tr></thead><tbody>
+@foreach(var x in Model.Tarjetas){var t=Model.Titulares.FirstOrDefault(y=>y.TitularID==x.TitularID);<tr><td>@x.NumeroToken</td><td>@t?.Nombres @t?.Apellidos</td><td>@(t?.DPI ?? "Pendiente de registrar")</td><td>Q @x.Saldo.ToString("0.00")</td><td>@x.Estado</td><td><form asp-action="CambiarEstado" method="post" class="inline-form"><input type="hidden" name="id" value="@x.TarjetaID"/><input type="hidden" name="q" value="@Model.Q"/><input type="hidden" name="pagina" value="@Model.Pagina"/><select name="estado"><option>ACTIVA</option><option>BLOQUEADA</option><option>INACTIVA</option></select><button type="submit">Actualizar</button></form></td></tr>}
+@if(Model.Tarjetas.Count==0){<tr><td colspan="6" class="empty">No hay tarjetas registradas que coincidan con la búsqueda.</td></tr>}
+</tbody></table></div>
+<nav class="directory-pager" aria-label="Páginas de tarjetas">
+@if(Model.Pagina>1){<a asp-action="Index" asp-route-q="@Model.Q" asp-route-pagina="@(Model.Pagina-1)">Anterior</a>}
+@if(Model.Pagina<Model.Paginas){<a asp-action="Index" asp-route-q="@Model.Q" asp-route-pagina="@(Model.Pagina+1)">Siguiente</a>}
+</nav></section>
+@section Scripts {
+<script>
+(()=>{
+const input=document.getElementById('titularBusqueda'), id=document.getElementById('titularID'), list=document.getElementById('titularesSugeridos'), help=document.getElementById('titularAyuda');
+let timer, options=new Map(), generation=0;
+input.addEventListener('input',()=>{
+ clearTimeout(timer); const value=input.value.trim(); id.value=options.get(value)||'';
+ if(id.value){input.setCustomValidity('');help.textContent='Ciudadano seleccionado.';return;}
+ input.setCustomValidity('Seleccione un ciudadano de las sugerencias.');help.textContent='Buscando ciudadano...';
+ const current=++generation;
+ if(value.length<2){list.replaceChildren();help.textContent='Escriba al menos 2 caracteres.';return;}
+ timer=setTimeout(async()=>{try{
+ const response=await fetch('@Url.Action("BuscarTitulares", "Tarjetas")?q='+encodeURIComponent(value));if(!response.ok)throw new Error();
+ const rows=await response.json();if(current!==generation)return;
+ options=new Map();list.replaceChildren();for(const row of rows){const text=row.nombre+' · DPI '+(row.dpi||'pendiente')+' · #'+row.id;options.set(text,String(row.id));const option=document.createElement('option');option.value=text;list.appendChild(option);}
+ help.textContent=rows.length?'Seleccione una sugerencia.':'No hay coincidencias.';
+ }catch{help.textContent='No se pudo buscar. Intente nuevamente.';}},250);
+});
+})();
+</script>
+}
