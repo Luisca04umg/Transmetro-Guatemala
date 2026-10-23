@@ -1,0 +1,15 @@
+# Visual Studio y compilación
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+
+# Publicación y credenciales
+**/PublishProfiles/
+*.pubxml
+*.publishsettings
+*.pfx
+.env
+.env.*
+appsettings.Local.json
