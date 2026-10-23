@@ -8,6 +8,7 @@ Sistema ASP.NET Core MVC (.NET 8), C#, Entity Framework Core y SQL Server. La ap
 
 - Repositorio: https://github.com/Luisca04umg/Transmetro-Guatemala
 - Aplicación web: https://transmetro-luis-web-2026-gxemdbbcenf9hwcf.canadacentral-01.azurewebsites.net
+- Video Del Sistema: https://drive.google.com/file/d/1dSQmfzBqFkUSiOfxREd097N6gjZbB3On/view?usp=sharing
 
 ## Contenido
 
